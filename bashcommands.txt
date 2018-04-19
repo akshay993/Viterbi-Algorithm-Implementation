@@ -1,0 +1,61 @@
+#List of All Bash commands I used to create tau.pl, sigma.pl and tagcount.pl
+
+#Creating Tag Count
+awk 'NF{print $NF}' TDA.txt |  sort|uniq -c |sort -n -r > tagcount.txt
+
+#Remove . with @ in tagcount.txt
+sed -E -i '' "s/\./@/g" tagcount.txt
+
+
+#Calculating Tag pair Count
+awk 'NF{print $NF}' TDA.txt  > temp1.txt
+
+tail -n+2 temp1.txt > temp2.txt
+
+paste temp1.txt temp2.txt > pairs.txt
+
+sort < pairs.txt | uniq -c | sort -n -r > tag_pair_count.txt
+
+sed -i '' '$d' tag_pair_count.txt
+
+rm -f temp1.txt
+rm -f temp2.txt
+rm -f pairs.txt
+
+#Calculating word tag count
+cat TDA.txt |  sort|uniq -c |sort -n -r > word_tag_count.txt
+
+#replace . with @ in tag_pair_count
+sed -E -i '' "s/\./@/g" tag_pair_count.txt
+
+#remove . in word_tag_count
+sed -E -i '' "/\./d" word_tag_count.txt
+
+#remove $ in word_tag_count and tag_pair_count
+
+sed -E -i '' "s/\$//g" tag_pair_count.txt
+sed -E -i '' "s/\$//g" word_tag_count.txt
+
+#Creating sigma.pl
+sed -E "s/([0-9]+)[[:space:]]([A-Z\$]+)[[:space:]]([A-Z\$ ]+)/sigma\(\'\2\'\,\'\3\'\,\1\)\./g" tag_pair_count.txt > sigma.pl
+sed -E -i '' "s/([0-9]+)[[:space:]](\@)[[:space:]]([A-Z\$ ]+)/sigma\(\2\,\'\3\'\,\1\)\./g" sigma.pl
+sed -E -i '' "s/([0-9]+)[[:space:]]([A-Z\$]+)[[:space:]](\@)/sigma\(\'\2\'\,\3\,\1\)\./g" sigma.pl
+sed -E -i '' "s/([0-9]+)[[:space:]]([A-Z\$\@]+)[[:space:]](\@)/sigma\(\'\2\'\,\3\,\1\)\./g" sigma.pl
+
+#Creating tau.pl
+sed -E "s/([0-9]+)[[:space:]]([A-Z\$\.]+)[[:space:]]([A-Z\$\. ]+)/tau\(\'\2\'\,\'\3\'\,\1\)\./g" word_tag_count.txt >tau.pl
+sed -E -i '' "s/([0-9]+)[[:space:]]([a-z\@\$\.]+)[[:space:]]([A-Z\$\. ]+)/tau\(\2\,\'\3\'\,\1\)\./g" tau.pl
+sed -E -i '' "s/([0-9]+)[[:space:]]([A-Z\$\.]+)[[:space:]]([a-z\@\$\. ]+)/tau\(\'\2\'\,\'\3\'\,\1\)\./g" tau.pl
+sed -E -i '' "s/([0-9]+)[[:space:]]([A-Z]+[A-Za-z\$\.]+)[[:space:]]([A-Za-z\@\$\. ]+)/tau\(\'\2\'\,\'\3\'\,\1\)\./g" tau.pl
+sed -E -i '' "s/([0-9]+)[[:space:]]([a-z]+[A-Za-z\$\.]+)[[:space:]]([A-Za-z\@\$\. ]+)/tau\(\'\2\'\,\'\3\'\,\1\)\./g" tau.pl
+sed -i ''  1d tau.pl
+
+
+#Create Tagcount.pl
+sed -E "s/([0-9]+)[[:space:]]([A-z\$]+)/tagcount\(\'\2\'\,\1\)\./g" tagcount.txt >tagcount.pl
+sed -E -i '' "s/([0-9]+)[[:space:]](\@)/tagcount\(\2\,\1\)\./g" tagcount.pl
+
+#Removing useless files
+rm -f tagcount.txt
+rm -f tag_pair_count.txt
+rm -f word_tag_count.txt
